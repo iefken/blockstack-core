@@ -13,6 +13,10 @@ RUN apt-get install -y bitcoind sqlite3
 RUN mkdir ~/.bitcoin
 RUN echo "rpcuser=blockstack\nrpcpassword=blockstacksystem\n" > ~/.bitcoin/bitcoin.conf
 
+# Install NodeJS
+RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+
+# Change into the tests directory
 WORKDIR /src/blockstack/integration_tests
 
 RUN ./setup.py build && ./setup.py install
