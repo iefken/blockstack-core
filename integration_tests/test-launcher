@@ -217,7 +217,7 @@ commands () {
   cat <<-EOF
 blockstack docker launcher commands:
   build-tests -> build the test container
-  run-all -> loop through the tests runing 20 at a time
+  run-all -> loop through the tests runing $numContainers at a time
   check-results -> check results from finished tests
   write-results -> write test results to a configured influx instance
   log-progress -> log progress in the test suite
