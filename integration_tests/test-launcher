@@ -37,7 +37,7 @@ fi
 
 
 # Build the test container
-build-images () {
+build-image () {
   # Build testing container from blockstack-core:dev
   echo "Building test image from core image :$gitCommit"
   echo "docker build -f $testDF -t $testImage:$testTag $repoDir"
@@ -46,9 +46,9 @@ build-images () {
 }
 
 # Push the test containers to .acr
-push-images () {
+push-image () {
   # First build the tests to push
-  build-images
+  build-image
 
   # Then push testing image to registry
   echo "Pushing test image from core image :$gitCommit"
@@ -276,8 +276,8 @@ commands () {
   cat <<-EOF
 BLOCKSTACK DOCKER TEST LAUNCHER:
   Working with Docker Images:
-    build-images -> build the test container
-    push-images   -> build and push tests image to container registry
+    build-image -> build the test container
+    push-image   -> build and push tests image to container registry
 
   Running tests on local Docker daemon:
     run-one-local        -> run one test locally (pass test name)
@@ -296,11 +296,11 @@ EOF
 }
 
 case $1 in
-  build-images)
-    build-images
+  build-image)
+    build-image
     ;;
-  push-images)
-    push-images
+  push-image)
+    push-image
     ;;
   run-all-local)
     run-all-local
