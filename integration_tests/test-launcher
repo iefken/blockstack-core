@@ -97,7 +97,7 @@ tests () {
 }
 
 
-helm () {
+run-all-helm () {
   local tmpDir=$testDir/tmp/$gitCommit
   local scenarios=$(tests)
   mkdir -p $tmpDir
@@ -115,11 +115,11 @@ helm () {
   done
 }
 
-helm-logs () {
+results-helm () {
   local scenarios=$(tests)
   for sc in $scenarios; do
     local release=$(echo $sc |  sed -e 's/_/-/g')
-    echo "kubectl logs --namespace $gitCommit $(kubectl get pods --namespace $gitCommit -l app=$release-$gitCommit-integration-tests -o jsonpath='{ .items[0].metadata.name }' -a) --tail 100"
+    echo "kubectl logs --namespace $gitCommit $(kubectl get pods --namespace $gitCommit -l test=$release-$gitCommit -o jsonpath='{ .items[0].metadata.name }' -a) --tail 100"
   done
 }
 
@@ -262,6 +262,10 @@ BLOCKSTACK DOCKER TEST LAUNCHER:
     progress-local       -> log progress in the test suite
     cleanup-files-local  -> remove all files from test
     cleanup-docker-local -> cleanup docker containers from test
+
+  Running tests against a Kubernetes Cluster:
+    run-all-helm         -> use the helm chart in deployment/ to spin up a bunch of test containers
+    results-helm         -> check results from finished tests
 EOF
 }
 
@@ -293,8 +297,11 @@ case $1 in
   cleanup-docker-local)
     cleanup-docker-local
     ;;
-  helm)
-    helm
+  run-all-helm)
+    run-all-helm
+    ;;
+  results-helm)
+    results-helm
     ;;
   *)
     commands
