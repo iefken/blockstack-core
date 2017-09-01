@@ -15,6 +15,16 @@ RUN echo "rpcuser=blockstack\nrpcpassword=blockstacksystem\n" > ~/.bitcoin/bitco
 
 # Install NodeJS
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+RUN apt-get install -y nodejs
+
+# Install requirements for the blockstack.js integration tests
+RUN apt-get install -y git babel
+RUN npm i -g browserify
+RUN git clone https://git@github.com/blockstack/blockstack.js.git /tmp/blockstack.js
+RUN git clone https://github.com/blockstack/blockstack-storage-js.git /tmp/blockstack-storage-js
+RUN cd /tmp/blockstack.js && npm ln
+RUN cd /tmp/blockstack-storage-js && npm ln
+
 
 # Change into the tests directory
 WORKDIR /src/blockstack/integration_tests
