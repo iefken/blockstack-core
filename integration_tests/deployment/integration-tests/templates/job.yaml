@@ -1,5 +1,5 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: v1
+kind: Pod
 metadata:
   name: "{{ .Release.Name }}"
   labels:
@@ -8,23 +8,16 @@ metadata:
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 spec:
-  template:
-    metadata:
-      name: "{{ .Release.Name }}"
-      labels:
-        app: {{ template "fullname" . }}
-        release: "{{ .Release.Name }}"
-    spec:
-      restartPolicy: Never
-      containers:
-      - name: integration-test-run
-        image: "{{ .Values.imageRepo }}:{{ .Values.imageTag }}"
-        imagePullPolicy: "Always"
-        command: ["blockstack-test-scenario", "blockstack_integration_tests.scenarios.{{ .Values.testName }}"]
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 1Gi
-          requests:
-            cpu: 1000m
-            memory: 1Gi
+  restartPolicy: Never
+  containers:
+  - name: integration-test-run
+    image: "{{ .Values.imageRepo }}:{{ .Values.imageTag }}"
+    imagePullPolicy: "Always"
+    command: ["blockstack-test-scenario", "blockstack_integration_tests.scenarios.{{ .Values.testName }}"]
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
