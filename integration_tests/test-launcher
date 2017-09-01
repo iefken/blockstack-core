@@ -111,15 +111,40 @@ run-all-helm () {
   # Loop through files and create Pods for each one
   for sc in $scenarios; do
     local release=$(echo $sc |  sed -e 's/_/-/g')
-    echo "helm install --name $release-$gitCommit --namespace $gitCommit --values $tmpDir/$sc.yaml $testDir/deployment/integration-tests 2>&1 > /dev/null"
+    echo "kicking off test $release-$gitCommit"
+    helm install --name $release-$gitCommit --namespace $gitCommit --values $tmpDir/$sc.yaml $testDir/deployment/integration-tests 2>&1 > /dev/null
   done
+
+  # Remove the temporary files
+  rm -rf $tmpDir
+}
+
+run-one-helm () {
+  local tmpDir=$testDir/tmp/$gitCommit
+  local scenarios=$(tests)
+  mkdir -p $tmpDir
+
+  if [ $# -eq 0 ]; then
+    echo "need to input name of test to run"
+    echo "to get a list of tests run see blockstack_integration_tests/scenarios"
+    exit 1
+  fi
+
+  echo "imageTag: \"$gitCommit\"" >> $tmpDir/$1.yaml
+  echo "testName: \"$1\"" >> $tmpDir/$1.yaml
+
+  helm install --name $release-$gitCommit --namespace $gitCommit --values $tmpDir/$sc.yaml $testDir/deployment/integration-tests 2>&1 > /dev/null
+
+  rm -rf $tmpDir
 }
 
 results-helm () {
-  local scenarios=$(tests)
-  for sc in $scenarios; do
+  # local scenarios=$(tests)
+  local submitted=($(helm ls --short | grep $gitCommit))
+
+  for pod in $submitted; do
     local release=$(echo $sc |  sed -e 's/_/-/g')
-    echo "kubectl logs --namespace $gitCommit $(kubectl get pods --namespace $gitCommit -l test=$release-$gitCommit -o jsonpath='{ .items[0].metadata.name }' -a) --tail 100"
+    echo "kubectl logs --namespace $gitCommit $pod --tail 100"
   done
 }
 
@@ -265,6 +290,7 @@ BLOCKSTACK DOCKER TEST LAUNCHER:
 
   Running tests against a Kubernetes Cluster:
     run-all-helm         -> use the helm chart in deployment/ to spin up a bunch of test containers
+    run-one-helm         -> use the helm chart in deployment/ to spin up a single test container (pass name as arg)
     results-helm         -> check results from finished tests
 EOF
 }
@@ -299,6 +325,9 @@ case $1 in
     ;;
   run-all-helm)
     run-all-helm
+    ;;
+  run-one-helm)
+    run-one-helm
     ;;
   results-helm)
     results-helm
