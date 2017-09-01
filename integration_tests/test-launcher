@@ -3,8 +3,8 @@
 # This script provides a simple interface for running the integration tests in docker
 
 # Default image names
-testImage=quay.io/blockstack/blockstack-integration-tests
-coreImage=quay.io/blockstack/blockstack-core
+testImage=blockstackintegrationtests.azurecr.io/integration/tests
+coreImage=blockstackintegrationtests.azurecr.io/integration/core
 testTag=latest
 coreTag=dev
 gitCommit=$(git rev-parse --short HEAD)
@@ -13,8 +13,8 @@ gitBranch=$(git rev-parse --abbrev-ref HEAD)
 testDir=$repoDir/integration_tests
 
 # Dockerfiles
-devDF=$testDir/docker/Dockerfile.dev
-testDF=$testDir/docker/Dockerfile.tests
+devDF=$testDir/deployment/docker/Dockerfile.dev
+testDF=$testDir/deployment/docker/Dockerfile.tests
 
 # Test output
 outputDir=$testDir/test-out
@@ -47,6 +47,14 @@ build-tests () {
   # Build testing container from blockstack-core:dev
   echo "Building test image from core image :$gitCommit"
   docker build -f $testDF -t $testImage:$testTag $testDir
+}
+
+push-tests () {
+  echo "Pushing core image from branch $gitBranch, commit $gitCommit"
+  docker push $coreImage:$gitCommit
+
+  echo "Pushing test image from core image :$gitCommit"
+  docker push $coreImage:$gitCommit
 }
 
 # Division formatting for percent
@@ -229,6 +237,9 @@ EOF
 case $1 in
   build-tests)
     build-tests
+    ;;
+  push-tests)
+    push-tests
     ;;
   run-all)
     run-all
