@@ -1,6 +1,6 @@
 # This is a sample values.yaml file for running the blockstack integration tests
 # .Values.image.tag needs to be replaced with $(git rev-parse --short HEAD)
 # .Values.testName needs to be replaced with the name of the test to run
-imageRepo: blockstackintegrationtests.azurecr.io/integration/tests
+imageRepo: quay.io/blockstack/integrationtests
 imageTag: TESTGITBRANCH
 testName: TESTNAME

@@ -2,23 +2,22 @@
 
 # This script provides a simple interface for running the integration tests in docker
 
-# Default image names
-testImage=blockstackintegrationtests.azurecr.io/integration/tests
-coreImage=blockstackintegrationtests.azurecr.io/integration/core
+# Docker Image Settings
+testImage=quay.io/blockstack/integrationtests
 testTag=latest
-coreTag=dev
+
+# Git Branch and commit information
 gitCommit=$(git rev-parse --short HEAD)
-repoDir=$(git rev-parse --show-toplevel)
 gitBranch=$(git rev-parse --abbrev-ref HEAD)
+
+# Test directories
+repoDir=$(git rev-parse --show-toplevel)
 testDir=$repoDir/integration_tests
-
-# Dockerfiles
-devDF=$testDir/deployment/docker/Dockerfile.dev
-testDF=$testDir/deployment/docker/Dockerfile.tests
-
-# Test output
 outputDir=$testDir/test-out
 testOutputDir=$outputDir/$gitBranch-$gitCommit
+
+# Dockerfile
+testDF=$testDir/deployment/docker/Dockerfile.tests
 
 # Influx Configuration
 influxHost="monitoring.technofractal.com"
@@ -41,16 +40,17 @@ fi
 build-tests () {
   # Build testing container from blockstack-core:dev
   echo "Building test image from core image :$gitCommit"
-  docker build -f $testDF -t $testImage:$testTag $testDir
+  echo "docker build -f $testDF -t $testImage:$testTag $repoDir"
+  docker build -f $testDF -t $testImage:$testTag $repoDir
   docker tag $testImage:$testTag $testImage:$gitCommit
 }
 
 # Push the test containers to .acr
 push-tests () {
-  # First build the tests to push:
+  # First build the tests to push
   build-tests
 
-  # Finally push testing image to registry
+  # Then push testing image to registry
   echo "Pushing test image from core image :$gitCommit"
   docker push $testImage:$gitCommit
   docker push $testImage:$testTag
