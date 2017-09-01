@@ -37,7 +37,7 @@ fi
 
 
 # Build the test container
-build-tests () {
+build-images () {
   # Build testing container from blockstack-core:dev
   echo "Building test image from core image :$gitCommit"
   echo "docker build -f $testDF -t $testImage:$testTag $repoDir"
@@ -46,9 +46,9 @@ build-tests () {
 }
 
 # Push the test containers to .acr
-push-tests () {
+push-images () {
   # First build the tests to push
-  build-tests
+  build-images
 
   # Then push testing image to registry
   echo "Pushing test image from core image :$gitCommit"
@@ -96,25 +96,31 @@ tests () {
   echo "${out[@]}"
 }
 
-build-helm-values () {
+
+helm () {
   local tmpDir=$testDir/tmp/$gitCommit
   local scenarios=$(tests)
   mkdir -p $tmpDir
 
   # Make the values.yaml to launch the tests
   for sc in $scenarios; do
-    local release=$(echo $sc |  sed -e 's/_/-/g')
     echo "imageTag: \"$gitCommit\"" >> $tmpDir/$sc.yaml
     echo "testName: \"$sc\"" >> $tmpDir/$sc.yaml
   done
 
-  # Loop through files and create Jobs for each one
+  # Loop through files and create Pods for each one
   for sc in $scenarios; do
-    echo "helm install --name $release-$gitCommit --namespace $gitCommit --values $tmpDir/$sc.yaml $testDir/deployment/integration-tests"
+    local release=$(echo $sc |  sed -e 's/_/-/g')
+    echo "helm install --name $release-$gitCommit --namespace $gitCommit --values $tmpDir/$sc.yaml $testDir/deployment/integration-tests 2>&1 > /dev/null"
   done
+}
 
-  # remove the files when we are done
-  # rm -rf $tmpDir
+helm-logs () {
+  local scenarios=$(tests)
+  for sc in $scenarios; do
+    local release=$(echo $sc |  sed -e 's/_/-/g')
+    echo "kubectl logs --namespace $gitCommit $(kubectl get pods --namespace $gitCommit -l app=$release-$gitCommit-integration-tests -o jsonpath='{ .items[0].metadata.name }' -a) --tail 100"
+  done
 }
 
 # Runs all the tests in seperate docker containers
@@ -245,8 +251,8 @@ commands () {
   cat <<-EOF
 BLOCKSTACK DOCKER TEST LAUNCHER:
   Working with Docker Images:
-    build-tests -> build the test container
-    push-tests   -> build and push tests image to container registry
+    build-images -> build the test container
+    push-images   -> build and push tests image to container registry
 
   Running tests on local Docker daemon:
     run-one-local        -> run one test locally (pass test name)
@@ -260,11 +266,11 @@ EOF
 }
 
 case $1 in
-  build-tests)
-    build-tests
+  build-images)
+    build-images
     ;;
-  push-tests)
-    push-tests
+  push-images)
+    push-images
     ;;
   run-all-local)
     run-all-local
@@ -287,8 +293,8 @@ case $1 in
   cleanup-docker-local)
     cleanup-docker-local
     ;;
-  build-helm-values)
-    build-helm-values
+  helm)
+    helm
     ;;
   *)
     commands
