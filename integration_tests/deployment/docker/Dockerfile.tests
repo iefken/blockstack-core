@@ -1,4 +1,4 @@
-FROM quay.io/blockstack/blockstack-core:dev
+FROM blockstackintegrationtests.azurecr.io/integration/core:dev
 
 # Install Bitcoin
 RUN apt-get -y update
