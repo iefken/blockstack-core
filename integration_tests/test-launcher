@@ -100,6 +100,52 @@ tests () {
   echo "${out[@]}"
 }
 
+# Outputs the array of tests to run
+tests-kube () {
+  # Get test scenarios
+  local scenarios=($(ls -1 $(pwd)/blockstack_integration_tests/scenarios/ | sed -e 's/\.py$//' | sed -e 's/_/-/g'))
+
+  # Declare arrays for Tests to Skip and Output
+  declare -a skips
+  declare -a out
+
+  # Make skips array from file
+  while read -r line; do
+      [[ "$line" =~ ^#.*$ ]] && continue
+      skips+=("$line")
+  done < "./blockstack_integration_tests/tests_skip.txt"
+
+  # Loop through scenarios
+  for sc in "${scenarios[@]}"; do
+    if [[ ${skips[*]} =~ $sc ]]; then
+      continue
+    else
+      out+=($sc)
+    fi
+  done
+  echo "${out[@]}"
+}
+
+build-helm-values () {
+  local tmpDir=$testDir/tmp/$gitCommit
+  local scenarios=$(tests-kube)
+  mkdir -p $tmpDir
+
+  # Make the values.yaml to launch the tests
+  for sc in $scenarios; do
+    echo "imageTag: \"$gitCommit\"" >> $tmpDir/$sc.yaml
+    echo "testName: \"$sc\"" >> $tmpDir/$sc.yaml
+  done
+
+  # Loop through files and create Jobs for each one
+  for sc in $scenarios; do
+    echo "helm install --name $sc-$gitCommit --namespace $gitCommit --values $tmpDir/$sc.yaml $testDir/deployment/integration-tests"
+  done
+
+  # remove the files when we are done
+  # rm -rf $tmpDir
+}
+
 # Runs all the tests in seperate docker containers
 run-all-local () {
   # List of test scenarios to run
@@ -226,18 +272,19 @@ cleanup-files-local () {
 
 commands () {
   cat <<-EOF
-blockstack docker launcher commands:
-  build-tests -> build the test container
-  push-test -> push tests to container registry
+BLOCKSTACK DOCKER TEST LAUNCHER:
+  Working with Docker Images:
+    build-tests -> build the test container
+    push-test   -> push tests to container registry
 
-run local commands
-  run-one-local -> run one test locally (pass test name)
-  run-all-local -> loop through the tests runing $numContainers at a time
-  results-local -> check results from finished tests
-  write-local -> write test results to a configured influx instance
-  progress-local -> log progress in the test suite
-  cleanup-files-local -> remove all files from test
-  cleanup-docker-local -> cleanup docker containers from test
+  Running tests on local Docker daemon:
+    run-one-local        -> run one test locally (pass test name)
+    run-all-local        -> loop through the tests runing $numContainers at a time
+    results-local        -> check results from finished tests
+    write-local          -> write test results to a configured influx instance
+    progress-local       -> log progress in the test suite
+    cleanup-files-local  -> remove all files from test
+    cleanup-docker-local -> cleanup docker containers from test
 EOF
 }
 
@@ -268,6 +315,9 @@ case $1 in
     ;;
   cleanup-docker-local)
     cleanup-docker-local
+    ;;
+  build-helm-values)
+    build-helm-values
     ;;
   *)
     commands
