@@ -96,32 +96,6 @@ tests () {
   echo "${out[@]}"
 }
 
-# Outputs the array of tests to run
-# tests-kube () {
-#   # Get test scenarios
-#   local scenarios=($(ls -1 $(pwd)/blockstack_integration_tests/scenarios/ | sed -e 's/\.py$//' | sed -e 's/_/-/g'))
-#
-#   # Declare arrays for Tests to Skip and Output
-#   declare -a skips
-#   declare -a out
-#
-#   # Make skips array from file
-#   while read -r line; do
-#       [[ "$line" =~ ^#.*$ ]] && continue
-#       skips+=("$line")
-#   done < "./blockstack_integration_tests/tests_skip.txt"
-#
-#   # Loop through scenarios
-#   for sc in "${scenarios[@]}"; do
-#     if [[ ${skips[*]} =~ $sc ]]; then
-#       continue
-#     else
-#       out+=($sc)
-#     fi
-#   done
-#   echo "${out[@]}"
-# }
-
 build-helm-values () {
   local tmpDir=$testDir/tmp/$gitCommit
   local scenarios=$(tests)
