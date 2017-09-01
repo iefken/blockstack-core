@@ -39,25 +39,21 @@ fi
 
 # Build the test container
 build-tests () {
-  # First build the blockstack-core:dev image for base of testing image
-  echo "Building core image from branch $gitBranch, commit $gitCommit"
-  docker build -f $devDF -t $coreImage:$gitCommit $repoDir
-  docker tag $coreImage:$gitCommit $coreImage:$coreTag
-
   # Build testing container from blockstack-core:dev
   echo "Building test image from core image :$gitCommit"
   docker build -f $testDF -t $testImage:$testTag $testDir
+  docker tag $testImage:$testTag $testImage:$gitCommit
 }
 
 # Push the test containers to .acr
 push-tests () {
-  # First push the blockstack-core:dev image to registry
-  echo "Pushing core image from branch $gitBranch, commit $gitCommit"
-  docker push $coreImage:$gitCommit
+  # First build the tests to push:
+  build-tests
 
-  # Push testing image to registry
+  # Finally push testing image to registry
   echo "Pushing test image from core image :$gitCommit"
-  docker push $coreImage:$gitCommit
+  docker push $testImage:$gitCommit
+  docker push $testImage:$testTag
 }
 
 # Division formatting for percent
@@ -275,7 +271,7 @@ commands () {
 BLOCKSTACK DOCKER TEST LAUNCHER:
   Working with Docker Images:
     build-tests -> build the test container
-    push-test   -> push tests to container registry
+    push-test   -> build and push tests image to container registry
 
   Running tests on local Docker daemon:
     run-one-local        -> run one test locally (pass test name)

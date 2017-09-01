@@ -16,6 +16,8 @@ spec:
         release: "{{ .Release.Name }}"
     spec:
       restartPolicy: Never
+      imagePullSecrets:
+      - name: registrykey
       containers:
       - name: integration-test-run
         image: "{{ .Values.imageRepo }}:{{ .Values.imageTag }}"

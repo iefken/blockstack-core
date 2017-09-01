@@ -1,4 +1,8 @@
-FROM blockstackintegrationtests.azurecr.io/integration/core:dev
+FROM ubuntu:xenial
+
+# Install dependancies from apt
+RUN apt-get update
+RUN apt-get install -y python-pip python-dev libssl-dev libffi-dev rng-tools libgmp3-dev
 
 # Install Bitcoin
 RUN apt-get -y update
@@ -25,6 +29,17 @@ RUN git clone https://github.com/blockstack/blockstack-storage-js.git /tmp/block
 RUN cd /tmp/blockstack.js && npm ln
 RUN cd /tmp/blockstack-storage-js && npm ln
 
+# Install pyparsing
+RUN pip install --upgrade pip && pip install pyparsing
+
+# Build blockstack first
+WORKDIR /src/blockstack
+
+# Copy all files from the repo into the container
+COPY . .
+
+# Install Blockstack from source
+RUN pip install .
 
 # Change into the tests directory
 WORKDIR /src/blockstack/integration_tests
